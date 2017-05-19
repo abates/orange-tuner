@@ -1,0 +1,255 @@
+swagger: '2.0'
+info:
+  version: 0.0.1
+  title: Tuner API
+paths:
+  /channels:
+    get:
+      summary: Available Channels
+      description: >-
+        Retrieve the channels that have been scanned and are available for
+        tuning
+      responses:
+        '200':
+          description: List of available channels
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Channel'
+        '404':
+          description: >-
+            Returned if no channels are available.  This is returned if a scan
+            has not yet been run, or if no channels were found in a scan
+  '/channels/{id}':
+    get:
+      summary: Channel Details
+      description: Retrieve the metadata for a specific channel specified by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: number
+      responses:
+        '200':
+          description: Channel metadata
+          schema:
+            $ref: '#/definitions/Channel'
+        '404':
+          description: No channel matched the given ID
+  /scan:
+    get:
+      summary: Scan Results
+      responses:
+        '200':
+          description: Scan results
+          schema:
+            $ref: '#/definitions/TaskResult'
+    post:
+      summary: Start a new scan
+      responses:
+        '202':
+          description: Request for scan accepted
+          headers:
+            Location:
+              description: URL to poll the scan
+              type: string
+        '422':
+          description: A scan is already running
+  /epg:
+    get:
+      summary: Electronic Program Guide
+      description: Retrieve the entire available Electronic Program Guide (EPG)
+      responses:
+        '200':
+          description: EPG data
+          schema:
+            $ref: '#/definitions/Guide'
+        '404':
+          description: Returned if no channels are mapped
+  '/epg/{channel_id}':
+    get:
+      summary: Channel EPG
+      description: Retrieve the EPG for a specific channel specified by the channel_id
+      parameters:
+        - name: channel_id
+          in: path
+          required: true
+          type: number
+          description: Must match the ID of an existing channel
+      responses:
+        '200':
+          description: Available EPG for the channel
+          schema:
+            $ref: '#/definitions/ChannelGuide'
+        '404':
+          description: Invalid Channel ID
+  '/stream/{channel_id}/playlist.m3u8':
+    get:
+      produces:
+        - application/x-mpegURL
+      parameters:
+        - name: channel_id
+          in: path
+          required: true
+          type: number
+          description: Must match the ID of an existing channel
+      summary: Retrieve Channel Playlist
+      description: >-
+        This action instructs the tuner to tune to the given channel, start
+        segmenting and produce a playlist file.  If all this was successful the
+        playlist file is returned.
+      responses:
+        '200':
+          description: HLS playlist file
+        '404':
+          description: Invalid Channel ID
+        '503':
+          description: No tuners are available to service the request
+    delete:
+      parameters:
+        - name: channel_id
+          in: path
+          required: true
+          type: number
+          description: Must match the ID of an existing channel
+      summary: Stop Streaming
+      description: Stop streaming the channel and release the tuner resource
+      responses:
+        '200':
+          description: Stream was stopped
+        '404':
+          description: Invalid Channel ID
+  '/stream/{channel_id}/{segment_name}':
+    get:
+      produces:
+        - video/MP2T
+      parameters:
+        - name: channel_id
+          in: path
+          required: true
+          type: number
+          description: Must match the ID of an existing channel
+        - name: segment_name
+          in: path
+          required: true
+          type: string
+          description: name of the video segment to retrieve
+      summary: Retrieve Video Segment
+      description: Retrieve a given video segment file.
+      responses:
+        '200':
+          description: MPEG Transport Stream segment
+        '404':
+          description: Invalid Channel ID or channel not currently streaming
+definitions:
+  Channel:
+    description: Channel metadata
+    properties:
+      app_link_color:
+        type: string
+      app_link_icon_uri:
+        type: string
+      app_link_intent_uri:
+        type: string
+      app_link_poster_art_uri:
+        type: string
+      app_link_text:
+        type: string
+      description:
+        type: string
+      display_name:
+        type: string
+      display_number:
+        type: string
+      input_id:
+        type: string
+      internal_provider_data:
+        type: string
+      internal_provider_flag1:
+        type: string
+      internal_provider_flag2:
+        type: string
+      internal_provider_flag3:
+        type: string
+      internal_provider_flag4:
+        type: string
+      network_affiliation:
+        type: string
+      original_network_id:
+        type: string
+      searchable:
+        type: string
+      service_id:
+        type: string
+      service_type:
+        type: string
+      transport_stream_id:
+        type: string
+      type:
+        type: string
+      version_number:
+        type: string
+      video_format:
+        type: string
+  Program:
+    description: EPG data for a single program
+    properties:
+      audio_language:
+        type: string
+      broadcast_genre:
+        type: string
+      canonical_genre:
+        type: string
+      channel_id:
+        type: string
+      content_rating:
+        type: string
+      end_time_utc_millis:
+        type: string
+      episode_display_number:
+        type: string
+      episode_title:
+        type: string
+      internal_provider_data:
+        type: string
+      internal_provider_flag1:
+        type: string
+      internal_provider_flag2:
+        type: string
+      internal_provider_flag3:
+        type: string
+      internal_provider_flag4:
+        type: string
+      long_description:
+        type: string
+      searchable:
+        type: string
+      season_display_number:
+        type: string
+      season_title:
+        type: string
+      short_description:
+        type: string
+      start_time_utc_millis:
+        type: string
+      thumbnail_uri:
+        type: string
+      title:
+        type: string
+      version_number:
+        type: string
+      video_height:
+        type: string
+      video_width:
+        type: string
+  ChannelGuide:
+    description: EPG data for a single channel
+    properties:
+      programs:
+        type: array
+        items:
+          $ref: '#/definitions/Program'
+  Guide:
+    description: Complete program guide
+  TaskResult:
+    description: Information regarding an ongoing or completed task

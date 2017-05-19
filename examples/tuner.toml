@@ -1,0 +1,19 @@
+[[tuner]]
+  driver = "libdvb"
+  channelMap = "us-broadcast"
+  path = "/dev/dvb/adapter0"
+
+[[tuner]]
+  driver = "hdhomerun"
+  channelMap = "us-cable"
+  ip = "172.16.6.11"
+  port = 65001
+
+[[tuner]]
+  driver = "test"
+
+[[tuner]]
+  driver = "pipe"
+  channel_name = "1"
+  exec = "ffmpeg -i somefile -f mpegts pipe:1"
+  loop = true
